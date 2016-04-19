@@ -1,4 +1,5 @@
 "use strict";
+var Canvas = require('canvas');
 /*
  * MOSSE correlation filter
  *
@@ -68,9 +69,9 @@ function mosseFilter(params) {
             _im_part = new Array(_arrlen);
             _image_array = new Array(_arrlen);
         }
-        var canvas = document.createElement("canvas");
-        canvas.setAttribute('width', _w);
-        canvas.setAttribute('height', _h);
+        var canvas = new Canvas(_w, _h);
+        //canvas.setAttribute('width', _w);
+        //canvas.setAttribute('height', _h);
         _cc = canvas.getContext('2d');
     }
     
@@ -205,16 +206,16 @@ function mosseFilter(params) {
             return false;
         }
         
-        if (input.tagName == "VIDEO" || input.tagName == "IMG") {
-            // scale selection according to original source image
-            var videoLeft = Math.round((left/input.width)*input.videoWidth);
-            var videoTop = Math.round((top/input.height)*input.videoHeight);
-            var videoWidth = Math.round((width/input.width)*input.videoWidth);
-            var videoHeight = Math.round((height/input.height)*input.videoHeight);
-            _cc.drawImage(input, videoLeft, videoTop, videoWidth, videoHeight, 0, 0, _w, _h);
-        } else if (input.tagName == "CANVAS") {
+        //if (input.tagName == "VIDEO" || input.tagName == "IMG") {
+            //// scale selection according to original source image
+            //var videoLeft = Math.round((left/input.width)*input.videoWidth);
+            //var videoTop = Math.round((top/input.height)*input.videoHeight);
+            //var videoWidth = Math.round((width/input.width)*input.videoWidth);
+            //var videoHeight = Math.round((height/input.height)*input.videoHeight);
+            //_cc.drawImage(input, videoLeft, videoTop, videoWidth, videoHeight, 0, 0, _w, _h);
+        //} else if (input.tagName == "CANVAS") {
             _cc.drawImage(input, left, top, width, height, 0, 0, _w, _h);
-        }
+        //}
         
         var image = _cc.getImageData(0,0,_w,_h);
         var id = image.data;
@@ -375,16 +376,16 @@ function mosseFilter(params) {
           return false;
         }
         
-        if (input.tagName == "VIDEO" || input.tagName == "IMG") {
-            // scale selection according to original source image
-            var videoLeft = Math.round((left/input.width)*input.videoWidth);
-            var videoTop = Math.round((top/input.height)*input.videoHeight);
-            var videoWidth = Math.round((width/input.width)*input.videoWidth);
-            var videoHeight = Math.round((height/input.height)*input.videoHeight);
-            _cc.drawImage(input, videoLeft, videoTop, videoWidth, videoHeight, 0, 0, _w, _h);
-        } else if (input.tagName == "CANVAS") {
+        //if (input.tagName == "VIDEO" || input.tagName == "IMG") {
+            //// scale selection according to original source image
+            //var videoLeft = Math.round((left/input.width)*input.videoWidth);
+            //var videoTop = Math.round((top/input.height)*input.videoHeight);
+            //var videoWidth = Math.round((width/input.width)*input.videoWidth);
+            //var videoHeight = Math.round((height/input.height)*input.videoHeight);
+            //_cc.drawImage(input, videoLeft, videoTop, videoWidth, videoHeight, 0, 0, _w, _h);
+        //} else if (input.tagName == "CANVAS") {
             _cc.drawImage(input, left, top, width, height, 0, 0, _w, _h);
-        }
+        //}
         
         var image = _cc.getImageData(0,0,_w,_h);
         var id = image.data;

@@ -13,14 +13,14 @@ var jsfeat_face = function(image) {
   var w = image.width;
   var h = image.height;
   
-  if (image.tagName == 'VIDEO' || image.tagName == 'IMG') {
-    work_canvas = document.createElement('canvas');
-    work_canvas.height = h;
-    work_canvas.width = w;
-    work_ctx = work_canvas.getContext('2d');
-  } else if (image.tagName == 'CANVAS') {
+  //if (image.tagName == 'VIDEO' || image.tagName == 'IMG') {
+    //work_canvas = document.createElement('canvas');
+    //work_canvas.height = h;
+    //work_canvas.width = w;
+    //work_ctx = work_canvas.getContext('2d');
+  //} else if (image.tagName == 'CANVAS') {
     work_ctx = image.getContext('2d');
-  }
+  //}
   
   img_u8 = new jsfeat.matrix_t(w, h, jsfeat.U8_t | jsfeat.C1_t);
   ii_sum = new Int32Array((w+1)*(h+1));

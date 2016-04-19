@@ -3,6 +3,20 @@
 // shims
 var window = require('window-shim');
 
+var Canvas = require('canvas');
+var EventEmitter = require('events');
+var util = require('util');
+var MyEmitter= function(){
+    EventEmitter.call(this);
+};
+util.inherits(MyEmitter, EventEmitter);
+var emitter= new MyEmitter();
+console.log('console.log',emitter);
+emitter.on('test', ()=> console.log('test emitted!'));
+emitter.emit('test');
+
+
+
 // 3rd party libs
 var numeric = require('numeric');
 
@@ -23,6 +37,7 @@ var nose_filter = require('./filters/nose_filter.json');
 var clm = {
 	tracker : function(params) {
 		
+        this.emitter = emitter;
 		if (!params) params = {};
 		if (params.constantVelocity === undefined) params.constantVelocity = true;
 		if (params.searchWindow === undefined) params.searchWindow = 11;
@@ -91,9 +106,7 @@ var clm = {
 		
 		var webglFi, svmFi, mosseCalc;
 
-		var scoringCanvas = document.createElement('canvas');
-		//document.body.appendChild(scoringCanvas);
-		var scoringContext = scoringCanvas.getContext('2d');
+        var scoringCanvas, scoringContext
 		var msxmin, msymin, msxmax, msymax;
 		var msmodelwidth, msmodelheight;
 		var scoringWeights, scoringBias;
@@ -134,11 +147,12 @@ var clm = {
 			modelHeight = model.patchModel.canvasSize[1];
 			
 			// set up canvas to work on
-			sketchCanvas = document.createElement('canvas');
-			sketchCC = sketchCanvas.getContext('2d');
 
-			sketchW = sketchCanvas.width = modelWidth + (searchWindow-1) + patchSize-1;
-			sketchH = sketchCanvas.height = modelHeight + (searchWindow-1) + patchSize-1;
+			sketchW =  modelWidth + (searchWindow-1) + patchSize-1;
+			sketchH =  modelHeight + (searchWindow-1) + patchSize-1;
+
+			sketchCanvas = new Canvas(sketchW, sketchH);
+			sketchCC = sketchCanvas.getContext('2d');
 			
 			if (model.hints && mosseFilter && left_eye_filter && right_eye_filter && nose_filter) {
 				//var mossef_lefteye = new mosseFilter({drawResponse : document.getElementById('overlay2')});
@@ -183,8 +197,8 @@ var clm = {
 			if (model.scoring) {
 				scoringWeights = new Float64Array(model.scoring.coef);
 				scoringBias = model.scoring.bias;
-				scoringCanvas.width = model.scoring.size[0];
-				scoringCanvas.height = model.scoring.size[1];
+                scoringCanvas= new Canvas(model.scoring.size[0], model.scoring.size[1]);
+                scoringContext = scoringCanvas.getContext('2d');
 			}
 			
 			// load eigenvalues
@@ -210,7 +224,7 @@ var clm = {
 			
 			if (patchType == "SVM") {
 				var webGLContext;
-				var webGLTestCanvas = document.createElement('canvas');
+				var webGLTestCanvas = new Canvas(10,10);
 				if (window.WebGLRenderingContext) {
 					webGLContext = webGLTestCanvas.getContext('webgl') || webGLTestCanvas.getContext('experimental-webgl');
 					if (!webGLContext || !webGLContext.getExtension('OES_texture_float')) {
@@ -325,10 +339,10 @@ var clm = {
 				var gi = getInitialPosition(element, box);
 				if (!gi) {
 					// send an event on no face found
-					var evt = document.createEvent("Event");
-					evt.initEvent("clmtrackrNotFound", true, true);
-					document.dispatchEvent(evt)
-					
+					//var evt = document.createEvent("Event");
+					//evt.initEvent("clmtrackrNotFound", true, true);
+					//document.dispatchEvent(evt)
+                    this.emitter.emit('clmtrackrNotFound');
 					return false;
 				}
 				scaling = gi[0];
@@ -550,6 +564,7 @@ var clm = {
 				}
 				var paramUpdateLeft = numeric.add(prior, jtj);
 				var paramUpdateRight = numeric.sub(priorP, jtv);
+                //console.log(paramUpdateRight, paramUpdateLeft)
 				var paramUpdate = numeric.dot(numeric.inv(paramUpdateLeft), paramUpdateRight);
 				//var paramUpdate = numeric.solve(paramUpdateLeft, paramUpdateRight, true);
 				
@@ -605,10 +620,7 @@ var clm = {
 			previousPositions.splice(0, previousPositions.length == 10 ? 1 : 0);
 			previousPositions.push(currentPositions.slice(0));
 			
-			// send an event on each iteration
-			var evt = document.createEvent("Event");
-			evt.initEvent("clmtrackrIteration", true, true);
-			document.dispatchEvent(evt)
+            this.emitter.emit('clmtrackrIteration');
 			
 			if (this.getConvergence() < 0.5) {
 				// we must get a score before we can say we've converged
@@ -616,16 +628,13 @@ var clm = {
 					if (params.stopOnConvergence) {
 						this.stop();
 					}
-
-					var evt = document.createEvent("Event");
-					evt.initEvent("clmtrackrConverged", true, true);
-					document.dispatchEvent(evt)
+					this.emitter.emit("clmtrackrConverged");
 				}
 			}
 			
 			// return new points
 			return currentPositions;
-		}
+		};
 
 		/*
 		 *	reset tracking, so that track() will start a new detection
@@ -646,6 +655,7 @@ var clm = {
 		 */
 		this.draw = function(canvas, pv, path) {
 			// if no previous points, just draw in the middle of canvas
+             console.log('draw!');
 			
 			var params;
 			if (pv === undefined) {
@@ -908,9 +918,9 @@ var clm = {
 		
 		// detect position of face on canvas/video element
 		var detectPosition = function(el) {
-			var canvas = document.createElement('canvas');
-			canvas.width = el.width;
-			canvas.height = el.height;
+			var canvas = new Canvas(el.width, el.height);
+			//canvas.width = el.width;
+			//canvas.height = el.height;
 			var cc = canvas.getContext('2d');
 			cc.drawImage(el, 0, 0, el.width, el.height);
 			
@@ -1066,9 +1076,11 @@ var clm = {
 				canvasContext.strokeRect(candidate.x, candidate.y, candidate.width, candidate.height);*/
 				//
 
+                console.log(element)
 				var nose_result = mossef_nose.track(element, Math.round(candidate.x+(candidate.width/2)-(noseFilterWidth/2)), Math.round(candidate.y+candidate.height*(5/8)-(noseFilterWidth/2)), noseFilterWidth, noseFilterWidth, false);
 				var right_result = mossef_righteye.track(element, Math.round(candidate.x+(candidate.width*3/4)-(eyeFilterWidth/2)), Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2)), eyeFilterWidth, eyeFilterWidth, false);
 				var left_result = mossef_lefteye.track(element, Math.round(candidate.x+(candidate.width/4)-(eyeFilterWidth/2)), Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2)), eyeFilterWidth, eyeFilterWidth, false);
+                console.log('nose right',nose_result,right_result)
 				right_eye_position[0] = Math.round(candidate.x+(candidate.width*3/4)-(eyeFilterWidth/2))+right_result[0];
 				right_eye_position[1] = Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2))+right_result[1];
 				left_eye_position[0] = Math.round(candidate.x+(candidate.width/4)-(eyeFilterWidth/2))+left_result[0];
@@ -1108,7 +1120,9 @@ var clm = {
 				var rep = model.hints.rightEye;
 				var mep = model.hints.nose;
 				
+                console.log(lep,rep,mep)
 				// get scaling, rotation, etc. via procrustes analysis
+                console.log(procrustes_params, left_eye_position, right_eye_position)
 				var procrustes_params = procrustes([left_eye_position, right_eye_position, nose_position], [lep, rep, mep]);
 				translateX = procrustes_params[0];
 				translateY = procrustes_params[1];
@@ -1169,6 +1183,7 @@ var clm = {
 				currentParameters[3] = translateY;
 			}
 		
+            console.log(currentParameters);
 			currentPositions = calculatePositions(currentParameters, true);
 			
 			return [scaling, rotation, translateX, translateY];
@@ -1334,7 +1349,7 @@ var clm = {
 			window.oRequestAnimationFrame ||
 			window.msRequestAnimationFrame ||
 			function(/* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
-				return window.setTimeout(callback, 1000/60);
+				return setTimeout(callback, 1000/60);
 			};
 		})();
 		
@@ -1344,7 +1359,7 @@ var clm = {
 				window.mozCancelRequestAnimationFrame ||
 				window.oCancelRequestAnimationFrame ||
 				window.msCancelRequestAnimationFrame ||
-				window.clearTimeout;
+				clearTimeout;
 		})();
 		
 		return true;
