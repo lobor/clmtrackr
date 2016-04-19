@@ -1,5 +1,7 @@
 "use strict";
 
+var window = require('window-shim');
+
 var webglFilter = function() {
 
   /*

@@ -1,5 +1,8 @@
 "use strict";
 
+// shims
+var window = require('window-shim');
+
 // 3rd party libs
 var numeric = require('numeric');
 
