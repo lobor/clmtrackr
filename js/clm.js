@@ -11,11 +11,6 @@ var MyEmitter= function(){
 };
 util.inherits(MyEmitter, EventEmitter);
 var emitter= new MyEmitter();
-console.log('console.log',emitter);
-emitter.on('test', ()=> console.log('test emitted!'));
-emitter.emit('test');
-
-
 
 // 3rd party libs
 var numeric = require('numeric');
@@ -339,9 +334,6 @@ var clm = {
 				var gi = getInitialPosition(element, box);
 				if (!gi) {
 					// send an event on no face found
-					//var evt = document.createEvent("Event");
-					//evt.initEvent("clmtrackrNotFound", true, true);
-					//document.dispatchEvent(evt)
                     this.emitter.emit('clmtrackrNotFound');
 					return false;
 				}
@@ -402,9 +394,7 @@ var clm = {
 					}
 					
 					// send event to signal that tracking was lost
-					var evt = document.createEvent("Event");
-					evt.initEvent("clmtrackrLost", true, true);
-					document.dispatchEvent(evt)
+					this.emitter.emit("clmtrackrLost");
 					
 					return false;
 				}
@@ -655,8 +645,6 @@ var clm = {
 		 */
 		this.draw = function(canvas, pv, path) {
 			// if no previous points, just draw in the middle of canvas
-             console.log('draw!');
-			
 			var params;
 			if (pv === undefined) {
 				params = currentParameters.slice(0);
@@ -1076,11 +1064,9 @@ var clm = {
 				canvasContext.strokeRect(candidate.x, candidate.y, candidate.width, candidate.height);*/
 				//
 
-                console.log(element)
 				var nose_result = mossef_nose.track(element, Math.round(candidate.x+(candidate.width/2)-(noseFilterWidth/2)), Math.round(candidate.y+candidate.height*(5/8)-(noseFilterWidth/2)), noseFilterWidth, noseFilterWidth, false);
 				var right_result = mossef_righteye.track(element, Math.round(candidate.x+(candidate.width*3/4)-(eyeFilterWidth/2)), Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2)), eyeFilterWidth, eyeFilterWidth, false);
 				var left_result = mossef_lefteye.track(element, Math.round(candidate.x+(candidate.width/4)-(eyeFilterWidth/2)), Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2)), eyeFilterWidth, eyeFilterWidth, false);
-                console.log('nose right',nose_result,right_result)
 				right_eye_position[0] = Math.round(candidate.x+(candidate.width*3/4)-(eyeFilterWidth/2))+right_result[0];
 				right_eye_position[1] = Math.round(candidate.y+candidate.height*(2/5)-(eyeFilterWidth/2))+right_result[1];
 				left_eye_position[0] = Math.round(candidate.x+(candidate.width/4)-(eyeFilterWidth/2))+left_result[0];
@@ -1120,9 +1106,7 @@ var clm = {
 				var rep = model.hints.rightEye;
 				var mep = model.hints.nose;
 				
-                console.log(lep,rep,mep)
 				// get scaling, rotation, etc. via procrustes analysis
-                console.log(procrustes_params, left_eye_position, right_eye_position)
 				var procrustes_params = procrustes([left_eye_position, right_eye_position, nose_position], [lep, rep, mep]);
 				translateX = procrustes_params[0];
 				translateY = procrustes_params[1];
@@ -1183,7 +1167,6 @@ var clm = {
 				currentParameters[3] = translateY;
 			}
 		
-            console.log(currentParameters);
 			currentPositions = calculatePositions(currentParameters, true);
 			
 			return [scaling, rotation, translateX, translateY];
