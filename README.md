@@ -6,10 +6,10 @@ clmtrackr
 npm fork
 --------
 
-This fork exposes the clmtrackr library for use with npm. It can be used as a browser global as seen in examples, or via browserify etc as an npm module. To install:
+This fork exposes the clmtrackr library for use with npm and node.js. It can be used as a browser global as seen in examples, or via browserify etc as an npm module. To install:
 
 ```bash
-npm install andyinabox/clmtrackr
+npm install lobor/clmtrackr
 ```
 A pull request has been submitted to the main project, but I'm not sure if/when it will be integrated so this will do for now.
 
